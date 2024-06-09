@@ -15,7 +15,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = BertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=3)
 
 # Load the state dictionary into the model
-model.load_state_dict(torch.load('model_path.pth', map_location=device))
+model.load_state_dict(torch.load('model.pth', map_location=device))
 
 # Move the model to the appropriate device
 model.to(device)
