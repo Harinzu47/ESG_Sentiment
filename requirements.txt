@@ -1,7 +1,7 @@
 streamlit
 pandas
 numpy
-torch==2.3.0
+torch==2.3.1
 transformers
 matplotlib
 unidecode
