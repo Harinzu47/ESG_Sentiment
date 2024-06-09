@@ -1,11 +1,6 @@
 streamlit
 pandas
-numpy
-torch==2.2.2
+torch
 transformers
 matplotlib
-unidecode
-contractions
-tensorflow
-nltk
-scikit-learn
+pillow
