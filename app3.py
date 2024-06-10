@@ -157,11 +157,11 @@ def main():
             df = pd.read_csv(uploaded_file)
 
             # Check if the expected column exists
-            if 'text' not in df.columns:
+            if 'Text' not in df.columns:
                 st.write("File CSV harus memiliki kolom 'text'")
             else:
                 # Predict sentiment for each text
-                df['Prediksi Sentimen'] = df['text'].apply(lambda x: sentiment_mapping[predict_sentiment(x)])
+                df['Prediksi Sentimen'] = df['Text'].apply(lambda x: sentiment_mapping[predict_sentiment(x)])
 
                 # Display the results
                 st.write("Hasil Prediksi Sentimen:")
