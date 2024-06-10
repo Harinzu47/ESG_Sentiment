@@ -1,5 +1,5 @@
 [server]
 enableCORS = false
 headless = true
-heartbeatRate = 30
+heartbeatRate = 60
 port = 8501
