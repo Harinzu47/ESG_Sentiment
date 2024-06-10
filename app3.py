@@ -3,7 +3,26 @@ import pandas as pd
 import torch
 from transformers import BertTokenizer, BertForSequenceClassification
 import matplotlib.pyplot as plt
-from PIL import Image
+from PIL import Image, ImageDraw, ImageOps
+
+# Function to create a circular image
+def make_circular_image(image_path):
+    try:
+        img = Image.open(image_path).convert("RGBA")
+        size = (min(img.size),) * 2  # Ensure the mask is a square
+        mask = Image.new("L", size, 0)
+        draw = ImageDraw.Draw(mask)
+        draw.ellipse((0, 0) + size, fill=255)
+        output = ImageOps.fit(img, size, centering=(0.5, 0.5))
+        output.putalpha(mask)
+        return output
+    except Exception as e:
+        st.error(f"Error creating circular image: {e}")
+        return None
+
+# Display logo at the top of each menu
+def display_logo():
+    st.image("Logofix.png", width=200)
 
 # Load the tokenizer for bert-base-uncased
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
@@ -98,62 +117,114 @@ def main():
     theme = st.sidebar.radio("Select theme", ["dark", "white"], index=0)
     set_theme(theme)
 
-    # Load and resize logo image
-    image_path = "Logofix.png"
-    img = Image.open(image_path)
-    img.thumbnail((300, 300))  # Resize the image to fit within 800x800 pixels
+    # Sidebar for navigation
+    st.sidebar.title("Menu")
+    menu = st.sidebar.radio("Pilih Menu", ["Deskripsi", "Analisis Sentimen", "Our Team"])
 
-    # Display logo image
-    st.image(img)
-    st.title("Dashboard Analisis Sentimen")
+    if menu == "Deskripsi":
+        display_logo()
+        st.title("Deskripsi ESG")
+        st.write(""" ESG merupakan panduan harus diterapkan oleh perusahaan yang ingin berinvestasi dengan mempertimbangkan aspek lingkungan, sosial, dan tata kelola. Konsep ini digunakan sebagai acuan  ukur untuk mengevaluasi dampak sosial dan keberlanjutan dari investasi yang dilakukan oleh perusahaan. 
+        """)
+        st.title("Deskripsi Proyek")
+        st.write("""
+        ### Proyek Analisis Sentimen ESG
+        Proyek ini bertujuan untuk menganalisis sentimen dari teks yang diberikan.
+        Dengan menggunakan model pembelajaran mesin dari transformers, kita dapat mengidentifikasi sentimen positif, negatif, atau netral dari teks yang diinput.
+        
+        Data proyek ini adalah bertipe One-Hot Encoding : Dataset dengan angka 0 dan 1 juga dapat mengindikasikan penggunaan one-hot encoding, di mana setiap kolom mewakili satu kategori dan memiliki nilai 0 atau 1 untuk menunjukkan kehadiran atau ketiadaan kategori tersebut. Misalnya, jika ada kolom-kolom seperti "Kategori Positif", "Kategori Netral ", dan "Kategori Negatif", dengan angka 0 dan 1, maka nilai 0 menunjukkan bahwa kategori tersebut tidak ada atau netral, sementara nilai 1 menunjukkan bahwa kategori tersebut ada.
 
-    st.write("Ini adalah aplikasi untuk analisis sentimen dengan Topik ESG")
+        """)
+        st.image("poster.png", use_column_width=True)
 
-    # File upload
-    uploaded_file = st.file_uploader("Unggah file CSV untuk analisis sentimen dalam jumlah banyak", type=["csv"])
+    elif menu == "Analisis Sentimen":
+        # Load and resize logo image
+        image_path = "Logofix.png"
+        img = Image.open(image_path)
+        img.thumbnail((300, 300))  # Resize the image to fit within 300x300 pixels
 
-    if uploaded_file:
-        # Read the uploaded file
-        df = pd.read_csv(uploaded_file, on_bad_lines='skip')
+        # Display logo image
+        st.image(img)
+        st.title("Dashboard Analisis Sentimen")
 
-        # Check if the expected column exists
-        if 'Text' not in df.columns:
-            st.write("File CSV harus memiliki kolom 'text'")
-        else:
-            # Predict sentiment for each text
-            df['Prediksi Sentimen'] = df['Text'].apply(lambda x: sentiment_mapping[predict_sentiment(x)])
+        st.write("Ini adalah aplikasi untuk analisis sentimen dengan Topik ESG")
 
-            # Display the results
-            st.write("Hasil Prediksi Sentimen:")
-            st.write(df)
+        # File upload
+        uploaded_file = st.file_uploader("Unggah file CSV untuk analisis sentimen dalam jumlah banyak", type=["csv"])
 
-            # Plot the pie chart
-            sentiment_counts = df['Prediksi Sentimen'].value_counts()
-            fig, ax = plt.subplots()
-            ax.pie(sentiment_counts, labels=sentiment_counts.index, autopct='%1.1f%%')
-            ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+        if uploaded_file:
+            # Read the uploaded file
+            df = pd.read_csv(uploaded_file)
 
-            st.pyplot(fig)
+            # Check if the expected column exists
+            if 'text' not in df.columns:
+                st.write("File CSV harus memiliki kolom 'text'")
+            else:
+                # Predict sentiment for each text
+                df['Prediksi Sentimen'] = df['text'].apply(lambda x: sentiment_mapping[predict_sentiment(x)])
 
-    # Single text input
-    user_input = st.text_area("Masukkan teks untuk analisis sentimen:")
+                # Display the results
+                st.write("Hasil Prediksi Sentimen:")
+                st.write(df)
 
-    if st.button("Analisis"):
-        if user_input:
-            # Predict sentiment
-            predicted_sentiment = predict_sentiment(user_input)
-            predicted_sentiment_description = sentiment_mapping[predicted_sentiment]
+                # Plot the pie chart
+                sentiment_counts = df['Prediksi Sentimen'].value_counts()
+                fig, ax = plt.subplots()
+                ax.pie(sentiment_counts, labels=sentiment_counts.index, autopct='%1.1f%%')
+                ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
 
-            # Display the results
-            results_df = pd.DataFrame({
-                'Teks Sentimen': [user_input],
-                'Prediksi Sentimen': [predicted_sentiment_description]
-            })
+                st.pyplot(fig)
 
-            st.write("Hasil Prediksi Sentimen:")
-            st.write(results_df)
-        else:
-            st.write("Silakan masukkan teks untuk analisis.")
+        # Single text input
+        user_input = st.text_area("Masukkan teks untuk analisis sentimen:")
+
+        if st.button("Analisis"):
+            if user_input:
+                # Predict sentiment
+                predicted_sentiment = predict_sentiment(user_input)
+                predicted_sentiment_description = sentiment_mapping[predicted_sentiment]
+
+                # Display the results
+                results_df = pd.DataFrame({
+                    'Teks Sentimen': [user_input],
+                    'Prediksi Sentimen': [predicted_sentiment_description]
+                })
+
+                st.write("Hasil Prediksi Sentimen:")
+                st.write(results_df)
+            else:
+                st.write("Silakan masukkan teks untuk analisis.")
+
+    elif menu == "Our Team":
+        display_logo()
+        st.title("Our Team Gcoder")
+        col1, col2 = st.columns(2)
+
+        with col1:
+            img = make_circular_image("team1.png")
+            if img:
+                st.image(img, use_column_width=True)
+            st.write("**Denisa Septalian**")
+            st.write("Project Leader & Analist.")
+
+            img = make_circular_image("team2.png")
+            if img:
+                st.image(img, use_column_width=True)
+            st.write("**Lintang Karunia A.**")
+            st.write("Visualization.")
+
+        with col2:
+            img = make_circular_image("team3.png")
+            if img:
+                st.image(img, use_column_width=True)
+            st.write("**Bernardinus Rico**")
+            st.write("Modeler 1.")
+
+            img = make_circular_image("team4.png")
+            if img:
+                st.image(img, use_column_width=True)
+            st.write("**Khalid Jundullah**")
+            st.write("Modeler 2.")
 
 if __name__ == "__main__":
     main()
